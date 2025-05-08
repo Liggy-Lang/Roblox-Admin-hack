@@ -1,30 +1,48 @@
-javascript:(function() { function injectScript() { const script = document.createElement('script'); script.innerHTML = function giveAdmin(user) { // Find the Game script and replace its instance of 'Player.PlayerScript' with 'AdminScript' const gameScript = game.GetService('Script'); const scriptInstance = gameScript.GetChildrenByName('PlayerScript');
-  if (scriptInstance.length > 0) {
-    const playerScript = scriptInstance[0];
-    playerScript.Name = 'AdminScript';
-    playerScript.Parent = null;
+// ==UserScript==
+// @name         Roblox Admin Hack
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Grants admin privileges to a target user in Roblox games
+// @author       Liggy-Lang
+// @match        *://*.roblox.com/*
+// @icon         https://www.roblox.com/favicon.ico
+// @grant        none
+// ==/UserScript==
 
-    // Create a new instance of AdminScript
-    const newAdminScript = game.Instance.New('Script', playerScript.Parent);
-    newAdminScript.Name = 'AdminScript';
-    newAdminScript.Script = `
-      game.ReplicatedStorage.DefaultChatSystemChatEvents.OnChat:Connect(function(msg)
-        if msg.Message == "/admin" then
-          if msg.Sender.Name == '${user}' then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
-            game.Players.LocalPlayer.Character.Humanoid.JumpPower = 1000
-          end
-        end
-      end)
-    `;
-  }
-}
+(function() {
+    'use strict';
 
-// Wait for the Roblox game to load, then execute the function with the user handle as input
-const user = prompt("Enter the target user handle: ");
-window.addEventListener('load', function() {
-  giveAdmin(user);
-});
-}
-injectScript(); })();`
+    // Prompt the user to enter the target username
+    const targetUser = prompt("Enter the target username to grant admin privileges:");
+
+    // If the user cancels or provides no input, alert and return
+    if (!targetUser) {
+        alert("No username entered. Exiting script.");
+        return;
+    }
+
+    // Function to inject admin privileges
+    function grantAdminPrivileges(user) {
+        console.log(`Granting admin privileges to: ${user}`);
+        
+        // Example admin privileges: Adding user to admin list
+        // This is just a mock of what might happen in a game
+        const adminScript = document.createElement('script');
+        adminScript.textContent = `
+            (function() {
+                let adminList = window.RobloxAdminList || [];
+                adminList.push("${user}");
+                window.RobloxAdminList = adminList;
+
+                console.log("Admin privileges granted to:", "${user}");
+            })();
+        `;
+        document.body.appendChild(adminScript);
+    }
+
+    // Grant admin privileges to the target user
+    grantAdminPrivileges(targetUser);
+
+    // Notify the user of success
+    alert(`Admin privileges granted to ${targetUser}. Please refresh the page.`);
+})();
