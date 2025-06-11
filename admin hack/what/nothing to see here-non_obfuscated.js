@@ -1,48 +1,65 @@
 // ==UserScript==
-// @name         Roblox Admin Hack
-// @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Grants admin privileges to a target user in Roblox games
-// @author       Liggy-Lang
-// @match        *://*.roblox.com/*
-// @icon         https://www.roblox.com/favicon.ico
-// @grant        none
+// @name          Roblox Admin Hack
+// @namespace     http://tampermonkey.net/
+// @version        0.1
+// @description    Grant admin privileges to specified user
+// @match          https://www.roblox.com/*
+// @grant         none
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    // Prompt the user to enter the target username
-    const targetUser = prompt("Enter the target username to grant admin privileges:");
+    // Get the target user handle input and submit button elements
+    const userInput = document.createElement('input');
+    userInput.type = 'text';
+    userInput.id = 'targetUser';
+    userInput.placeholder = 'Enter target user handle';
 
-    // If the user cancels or provides no input, alert and return
-    if (!targetUser) {
-        alert("No username entered. Exiting script.");
-        return;
-    }
+    const submitButton = document.createElement('button');
+    submitButton.id = 'submitButton';
+    submitButton.textContent = 'Grant Admin';
 
-    // Function to inject admin privileges
-    function grantAdminPrivileges(user) {
-        console.log(`Granting admin privileges to: ${user}`);
-        
-        // Example admin privileges: Adding user to admin list
-        // This is just a mock of what might happen in a game
-        const adminScript = document.createElement('script');
-        adminScript.textContent = `
-            (function() {
-                let adminList = window.RobloxAdminList || [];
-                adminList.push("${user}");
-                window.RobloxAdminList = adminList;
+    // Add the input and submit button to the bookmark toolbar
+    const bookmarkBar = document.getElementById('bookmarksToolbar');
+    bookmarkBar.appendChild(userInput);
+    bookmarkBar.appendChild(submitButton);
 
-                console.log("Admin privileges granted to:", "${user}");
-            })();
+    // Handle click event on the submit button and grant admin privileges
+    submitButton.addEventListener('click', () => {
+        const targetUserHandle = userInput.value.toLowerCase();
+
+        if (!targetUserHandle) {
+            alert('Please enter a target user handle.');
+            return;
+        }
+
+        // Create an element to store the pending admin request data
+        const adminsRequest = document.createElement('script');
+        adminsRequest.id = 'adminRequest';
+
+        // Add the pending admin request data to the script element
+        adminsRequest.textContent = `
+        (() => {
+            const targetUserHandle = '${targetUserHandle}';
+            const adminScript = document.createElement('script');
+            adminScript.textContent = \`
+            localPlayer.PlayerScripts.RemoteEvents.onAdminRequest.OnClientEvent:Connect(function()
+                game:GetService('ReplicatedStorage').DefaultChatSystemChatEvents.SayChat:FireServer('Admin Request: ACCOUNT', targetUserHandle, game.Players.LocalPlayer);
+            \ `;
+            game.OpeningService.Scripts.Scripts:Add(adminScript);
+        })();
         `;
-        document.body.appendChild(adminScript);
-    }
 
-    // Grant admin privileges to the target user
-    grantAdminPrivileges(targetUser);
+        // Add the script element to the head of the page
+        const head = document.head;
+        head.appendChild(adminsRequest);
+    });
 
-    // Notify the user of success
-    alert(`Admin privileges granted to ${targetUser}. Please refresh the page.`);
+    // Handle page refresh or navigation, clear the input and reset the script element
+    window.addEventListener('DOMContentLoaded', () => {
+        userInput.value = '';
+        const adminsRequest = document.getElementById('adminRequest');
+        adminsRequest && head.removeChild(adminsRequest);
+    }, true);
 })();
